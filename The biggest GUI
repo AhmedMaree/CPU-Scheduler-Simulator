@@ -1,0 +1,273 @@
+import cpuscheduler.GanttChart;
+
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
+import javax.swing.border.EmptyBorder;
+import javax.swing.table.DefaultTableModel;
+
+public class CPUSchedulerGUI extends JFrame {
+
+    private static final long serialVersionUID = 1L;
+
+    private JTextField tfProcessId;
+    private JTextField tfArrivalTime;
+    private JTextField tfBurstTime;
+    private JTextField tfPriority;
+    private JCheckBox cbPreemptive;
+    private JButton btnAddProcess;
+    private JButton btnClearProcesses;
+    private JButton btnRunScheduler;
+    private JTable tblProcesses;
+    private DefaultTableModel tblModel;
+    private JLabel lblAlgorithm;
+    private JCheckBox cbFCFS;
+    private JCheckBox cbRoundRobin;
+    private JCheckBox cbSJF;
+    private JCheckBox cbPriority;
+    private JTextField tfQuantum;
+    private JPanel pnlProcesses;
+    private JPanel pnlAlgorithms;
+    private JPanel pnlOptions;
+    private JPanel pnlButtons;
+    private JPanel pnlGanttChart;
+    private JPanel pnlAvgTimes;
+    private JLabel lblGanttChart;
+    private JLabel lblAvgWaitingTime;
+    private JLabel lblAvgTurnaroundTime;
+    private JScrollPane spGanttChart;
+    private List<Process> processes;
+    private GanttChart ganttChart;
+
+    public CPUSchedulerGUI() {
+        setTitle("CPU Scheduler");
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+        // Create process input fields
+        JPanel pnlProcessId = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        pnlProcessId.add(new JLabel("Process ID:"));
+        tfProcessId = new JTextField(5);
+        pnlProcessId.add(tfProcessId);
+
+        JPanel pnlArrivalTime = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        pnlArrivalTime.add(new JLabel("Arrival Time:"));
+        tfArrivalTime = new JTextField(5);
+        pnlArrivalTime.add(tfArrivalTime);
+
+        JPanel pnlBurstTime = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        pnlBurstTime.add(new JLabel("Burst Time:"));
+        tfBurstTime = new JTextField(5);
+        pnlBurstTime.add(tfBurstTime);
+
+        JPanel pnlPriority = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        pnlPriority.add(new JLabel("Priority:"));
+        tfPriority = new JTextField(5);
+        pnlPriority.add(tfPriority);
+
+        cbPreemptive = new JCheckBox("Preemptive");
+
+        btnAddProcess = new JButton("Add Process");
+        btnAddProcess.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                addProcess();
+            }
+        });
+
+        btnClearProcesses = new JButton("Clear Processes");
+        btnClearProcesses.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                clearProcesses();
+            }
+
+            private void clearProcesses() {
+            }
+        });
+
+        // Create table to display processes
+        tblModel = new DefaultTableModel(new Object[][]{}, new String[]{"Process ID", "Arrival Time", "Burst Time", "Priority", "Preemptive"});
+        tblProcesses = new JTable(tblModel);
+        JScrollPane spProcesses = new JScrollPane(tblProcesses);
+
+        // Create algorithm selection checkboxes
+        cbFCFS = new JCheckBox("FCFS");
+        cbRoundRobin = new JCheckBox("Round Robin");
+        cbSJF = new JCheckBox("SJF");
+        cbPriority = new JCheckBox("Priority");
+
+        tfQuantum = new JTextField(5);
+        tfQuantum.setEnabled(false);
+
+        // Add action listener to enable/disable quantum text field based on Round Robin checkbox
+        cbRoundRobin.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                tfQuantum.setEnabled(cbRoundRobin.isSelected());
+            }
+        });
+
+        // Create algorithm options panel
+        pnlOptions = new JPanel();
+        pnlOptions.setLayout(new BoxLayout(pnlOptions, BoxLayout.Y_AXIS));
+        pnlOptions.setBorder(BorderFactory.createTitledBorder("Options"));
+        pnlOptions.add(cbPreemptive);
+        JPanel pnlQuantum = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        pnlQuantum.add(new JLabel("Quantum:"));
+        pnlQuantum.add(tfQuantum);
+        pnlOptions.add(pnlQuantum);
+
+        // Create algorithm selection panel
+        pnlAlgorithms = new JPanel();
+        pnlAlgorithms.setLayout(new BoxLayout(pnlAlgorithms, BoxLayout.Y_AXIS));
+        pnlAlgorithms.setBorder(BorderFactory.createTitledBorder("Algorithms"));
+        pnlAlgorithms.add(cbFCFS);
+        pnlAlgorithms.add(cbRoundRobin);
+        pnlAlgorithms.add(cbSJF);
+        pnlAlgorithms.add(cbPriority);
+        pnlAlgorithms.add(pnlOptions);
+
+        // Create buttons panel
+        pnlButtons = new JPanel();
+        pnlButtons.setLayout(new BoxLayout(pnlButtons, BoxLayout.Y_AXIS));
+        pnlButtons.add(btnAddProcess);
+        pnlButtons.add(Box.createRigidArea(new Dimension(0, 5)));
+        pnlButtons.add(btnClearProcesses);
+        pnlButtons.add(Box.createVerticalGlue());
+        pnlButtons.add(Box.createRigidArea(new Dimension(0, 5)));
+        btnRunScheduler = new JButton("Run Scheduler");
+        btnRunScheduler.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                runScheduler();
+            }
+
+            private void runScheduler() {
+            }
+        });
+        pnlButtons.add(btnRunScheduler);
+
+        // Create processes panel
+        pnlProcesses = new JPanel(new BorderLayout());
+        pnlProcesses.setBorder(BorderFactory.createTitledBorder("Processes"));
+        pnlProcesses.add(spProcesses, BorderLayout.CENTER);
+        pnlProcesses.add(pnlButtons, BorderLayout.EAST);
+
+        // Create Gantt chart panel
+        pnlGanttChart = new JPanel(new BorderLayout());
+        pnlGanttChart.setBorder(BorderFactory.createTitledBorder("Gantt Chart"));
+        lblGanttChart = new JLabel();
+        spGanttChart = new JScrollPane(lblGanttChart);
+        pnlGanttChart.add(spGanttChart, BorderLayout.CENTER);
+
+        // Create average times panel
+        pnlAvgTimes = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        pnlAvgTimes.setBorder(BorderFactory.createTitledBorder("Average Times"));
+        lblAvgWaitingTime = new JLabel("Average Waiting Time: ");
+        pnlAvgTimes.add(lblAvgWaitingTime);
+        lblAvgTurnaroundTime = new JLabel("Average Turnaround Time: ");
+        pnlAvgTimes.add(lblAvgTurnaroundTime);
+
+        // Create main panel
+        JPanel pnlMain = new JPanel();
+        pnlMain.setLayout(new BoxLayout(pnlMain, BoxLayout.Y_AXIS));
+        pnlMain.setBorder(new EmptyBorder(10, 10, 10, 10));
+        pnlMain.add(pnlProcessId);
+        pnlMain.add(pnlArrivalTime);
+        pnlMain.add(pnlBurstTime);
+        pnlMain.add(pnlPriority);
+        pnlMain.add(cbPreemptive);
+        pnlMain.add(btnAddProcess);
+        pnlMain.add(btnClearProcesses);
+        pnlMain.add(pnlAlgorithms);
+        pnlMain.add(pnlProcesses);
+        pnlMain.add(pnlGanttChart);
+        pnlMain.add(pnlAvgTimes);
+
+        setContentPane(pnlMain);
+        pack();
+        setVisible(true);
+
+        processes = new ArrayList<Process>();
+        ganttChart = new GanttChart();
+    }
+
+    private void addProcess() {
+        try {
+            int processId = Integer.parseInt(tfProcessId.getText());
+            int arrivalTime = Integer.parseInt(tfArrivalTime.getText());
+            int burstTime = Integer.parseInt(tfBurstTime.getText());
+            int priority = Integer.parseInt(tfPriority.getText());
+            boolean preemptive = cbPreemptive.isSelected();
+
+            // Check if process ID already exists
+            for (Process process : processes) {
+
+                if (process.getClass() == processId) {
+                    JOptionPane.showMessageDialog(this, "Process ID already exists", "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+            }
+
+            // Add process to table and list
+            tblModel.addRow(new Object[]{processId, arrivalTime, burstTime, priority, preemptive});
+            processes.add(new Process() {
+                @Override
+                public OutputStream getOutputStream() {
+                    return null;
+                }
+
+                @Override
+                public InputStream getInputStream() {
+                    return null;
+                }
+
+                @Override
+                public InputStream getErrorStream() {
+                    return null;
+                }
+
+                @Override
+                public int waitFor() throws InterruptedException {
+                    return 0;
+                }
+
+                @Override
+                public int exitValue() {
+                    return 0;
+                }
+
+                @Override
+                public void destroy() {
+
+                }
+            });
+
+            // Clear input fields
+            tfProcessId.setText("");
+            tfArrivalTime.setText("");
+            tfBurstTime.setText("");
+            tfPriority.setText("");
+            cbPreemptive.setSelected(false);
+
+    /*/private class GanttChart {
+    }
+
+    private class GanttChart {
+    }}}}*/}}}
