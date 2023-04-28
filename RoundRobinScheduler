@@ -1,0 +1,50 @@
+import java.util.ArrayList;
+import java.util.List;
+
+public class RoundRobinScheduler extends Scheduler {
+    private int quantum;
+
+    //Constructor
+    public RoundRobinScheduler(Process[] processes, int quantum) {
+        super(processes);
+        this.quantum = quantum;
+    }
+
+    //Scheduling function
+    public List<float[]> schedule() {
+        List<float[]> timeline = new ArrayList<>();
+        int currentTime = 0;
+        int remainingQuantum = 0;
+        boolean allCompleted = false;
+        while (!allCompleted) {
+            allCompleted = true;
+            for (Process p : processes) {
+                if (p.getRemainingTime() > 0) {
+                    allCompleted = false;
+                    if (p.getArrivalTime() <= currentTime) {
+                        if (remainingQuantum == 0) {
+                            remainingQuantum = quantum;
+                            p.setWaitingTime(currentTime - p.getPreviousEndTime());
+                        }
+                        int time = Math.min(p.getRemainingTime(), remainingQuantum);
+                        p.setRemainingTime(p.getRemainingTime() - time);
+                        remainingQuantum -= time;
+                        currentTime += time;
+                        timeline.add(new float[]{p.getId(), time});
+                        p.setPreviousEndTime(currentTime);
+                    }
+                }
+            }
+            if (remainingQuantum == 0) {
+                remainingQuantum = quantum;
+            }
+            else {
+                currentTime += remainingQuantum;
+            }
+        }
+        for (Process p : processes) {
+            p.setTurnAroundTime(p.getPreviousEndTime() - p.getArrivalTime());
+        }
+        return timeline;
+    }
+}
