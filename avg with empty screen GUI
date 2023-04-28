@@ -1,0 +1,238 @@
+import cpuscheduler.Scheduler;
+
+import javax.swing.*;
+import java.awt.*;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.List;
+
+public class CPUSchedulerGUI extends JFrame {
+
+    private Scheduler scheduler;
+    private JPanel panel;
+    private JTextArea scheduleTextArea;
+    private JTextField waitingTimeTextField, turnaroundTimeTextField;
+
+    public CPUSchedulerGUI(Scheduler scheduler) {
+        this.scheduler = scheduler;
+        setTitle("CPU Scheduler");
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLayout(new BorderLayout());
+
+        // Create the panel for the schedule display
+        panel = new JPanel(new BorderLayout());
+        scheduleTextArea = new JTextArea();
+        panel.add(scheduleTextArea, BorderLayout.CENTER);
+        add(panel, BorderLayout.CENTER);
+
+        // Create the panel for the average times display
+        JPanel timesPanel = new JPanel(new FlowLayout());
+        JLabel waitingTimeLabel = new JLabel("Average Waiting Time: ");
+        waitingTimeTextField = new JTextField(10);
+        waitingTimeTextField.setEditable(false);
+        JLabel turnaroundTimeLabel = new JLabel("Average Turnaround Time: ");
+        turnaroundTimeTextField = new JTextField(10);
+        turnaroundTimeTextField.setEditable(false);
+        timesPanel.add(waitingTimeLabel);
+        timesPanel.add(waitingTimeTextField);
+        timesPanel.add(turnaroundTimeLabel);
+        timesPanel.add(turnaroundTimeTextField);
+        add(timesPanel, BorderLayout.SOUTH);
+
+        // Set the size of the window and display it
+        setSize(500, 400);
+        setVisible(true);
+
+        // Schedule the processes and display the results
+        List<float[]> timeline = scheduler.schedule();
+        float waitingTime = scheduler.getAverageTime(Scheduler.WAITING_TIME);
+        float turnaroundTime = scheduler.getAverageTime(Scheduler.TURNAROUND_TIME);
+        waitingTimeTextField.setText(String.format("%.2f", waitingTime));
+        turnaroundTimeTextField.setText(String.format("%.2f", turnaroundTime));
+        displaySchedule(timeline);
+    }
+
+    private void displaySchedule(List<float[]> timeline) {
+        scheduleTextArea.setText("");
+        for (float[] slot : timeline) {
+            String text = String.format("%.2f - %.2f: Process %d%n", slot[0], slot[0] + slot[1], (int) slot[2]);
+            scheduleTextArea.append(text);
+        }
+    }
+
+    public static void main(String[] args) {
+        // Create an array of processes
+        Process[] processes = {
+                new Process() {
+                    @Override
+                    public OutputStream getOutputStream() {
+                        return null;
+                    }
+
+                    @Override
+                    public InputStream getInputStream() {
+                        return null;
+                    }
+
+                    @Override
+                    public InputStream getErrorStream() {
+                        return null;
+                    }
+
+                    @Override
+                    public int waitFor() throws InterruptedException {
+                        return 0;
+                    }
+
+                    @Override
+                    public int exitValue() {
+                        return 0;
+                    }
+
+                    @Override
+                    public void destroy() {
+
+                    }
+                },
+                new Process() {
+                    @Override
+                    public OutputStream getOutputStream() {
+                        return null;
+                    }
+
+                    @Override
+                    public InputStream getInputStream() {
+                        return null;
+                    }
+
+                    @Override
+                    public InputStream getErrorStream() {
+                        return null;
+                    }
+
+                    @Override
+                    public int waitFor() throws InterruptedException {
+                        return 0;
+                    }
+
+                    @Override
+                    public int exitValue() {
+                        return 0;
+                    }
+
+                    @Override
+                    public void destroy() {
+
+                    }
+                },
+                new Process() {
+                    @Override
+                    public OutputStream getOutputStream() {
+                        return null;
+                    }
+
+                    @Override
+                    public InputStream getInputStream() {
+                        return null;
+                    }
+
+                    @Override
+                    public InputStream getErrorStream() {
+                        return null;
+                    }
+
+                    @Override
+                    public int waitFor() throws InterruptedException {
+                        return 0;
+                    }
+
+                    @Override
+                    public int exitValue() {
+                        return 0;
+                    }
+
+                    @Override
+                    public void destroy() {
+
+                    }
+                },
+                new Process() {
+                    @Override
+                    public OutputStream getOutputStream() {
+                        return null;
+                    }
+
+                    @Override
+                    public InputStream getInputStream() {
+                        return null;
+                    }
+
+                    @Override
+                    public InputStream getErrorStream() {
+                        return null;
+                    }
+
+                    @Override
+                    public int waitFor() throws InterruptedException {
+                        return 0;
+                    }
+
+                    @Override
+                    public int exitValue() {
+                        return 0;
+                    }
+
+                    @Override
+                    public void destroy() {
+
+                    }
+                },
+                new Process() {
+                    @Override
+                    public OutputStream getOutputStream() {
+                        return null;
+                    }
+
+                    @Override
+                    public InputStream getInputStream() {
+                        return null;
+                    }
+
+                    @Override
+                    public InputStream getErrorStream() {
+                        return null;
+                    }
+
+                    @Override
+                    public int waitFor() throws InterruptedException {
+                        return 0;
+                    }
+
+                    @Override
+                    public int exitValue() {
+                        return 0;
+                    }
+
+                    @Override
+                    public void destroy() {
+
+                    }
+                }
+        };
+
+        // Create the scheduler and the GUI
+        Scheduler scheduler = new RoundRobinScheduler(processes, 2.0f);
+        CPUSchedulerGUI gui = new CPUSchedulerGUI(scheduler);
+    }
+
+    private static class RoundRobinScheduler extends Scheduler {
+        public RoundRobinScheduler(Process[] processes, float v) {
+            super();
+        }
+
+        @Override
+        public List<float[]> schedule() {
+            return null;
+        }
+    }
+}
